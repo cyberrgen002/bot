@@ -1,35 +1,30 @@
-import axios from "axios";
+export const config = {
+  runtime: "nodejs"
+};
 
 export default async function handler(req, res) {
   try {
-    const data = req.body;
-
-    if (!data || !data.command) {
-      return res.status(200).end(); // Basecamp suka ini
+    if (req.method !== "POST") {
+      return res.status(200).json({
+        content: "Bot aktif. Gunakan command !bot ..."
+      });
     }
 
-    if (data.command !== "tes") {
-      return res.status(200).end();
-    }
+    // DEBUG LOG (penting)
+    console.log("HEADERS:", req.headers);
+    console.log("BODY:", req.body);
 
-    const callbackUrl = data.callback_url;
+    const content = req.body?.content || "(no content)";
 
-    await axios.post(
-      callbackUrl,
-      { content: "command bisa" },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-          "User-Agent": "Basecamp-Bot"
-        }
-      }
-    );
+    return res.status(200).json({
+      content: `✅ Bot OK. Kamu kirim: ${content}`
+    });
+  } catch (e) {
+    console.error("ERROR:", e);
 
-    return res.status(200).end();
-  } catch (err) {
-    console.error("BOT ERROR:", err.response?.data || err.message);
-    return res.status(200).end(); 
-    // ⚠️ JANGAN return 500 ke Basecamp
+    // ⚠️ JANGAN BALAS 500
+    return res.status(200).json({
+      content: "❌ Error internal bot (lihat log Vercel)."
+    });
   }
 }
